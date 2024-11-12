@@ -59,13 +59,6 @@ $categories = $conn->query($sql);
             max-width: 500px;
             margin: 20px 0;
         }
-
-        /* Cropper.js Container */
-        #cropperContainer {
-            width: 100%;
-            max-width: 500px;
-            margin-top: 20px;
-        }
     </style>
 </head>
 
@@ -93,6 +86,8 @@ $categories = $conn->query($sql);
                         while ($row = $categories->fetch_assoc()) {
                             echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
                         }
+                    } else {
+                        echo "<option value=''>Không có danh mục</option>";
                     }
                     ?>
                 </select>
@@ -109,9 +104,6 @@ $categories = $conn->query($sql);
             <!-- Chỗ hiển thị ảnh đã crop -->
             <div id="cropperContainer" style="display: none;">
                 <img id="image-preview" src="" alt="Image Preview" />
-                <div>
-                    <button type="button" class="btn btn-success mt-2" onclick="getCroppedImage()">Lưu ảnh đã crop</button>
-                </div>
             </div>
 
             <input type="hidden" name="cropped_image" id="cropped_image">
@@ -147,9 +139,6 @@ $categories = $conn->query($sql);
                         aspectRatio: 1,
                         viewMode: 1,
                         dragMode: 'move',
-                        crop(event) {
-                            // Tùy chỉnh crop theo nhu cầu
-                        }
                     });
                 };
                 reader.readAsDataURL(file);
@@ -164,7 +153,6 @@ $categories = $conn->query($sql);
             });
             const croppedImage = croppedCanvas.toDataURL('image/jpeg'); // Chuyển ảnh đã crop thành base64
             document.getElementById('cropped_image').value = croppedImage; // Lưu ảnh đã crop vào hidden field
-            alert("Ảnh đã được crop và lưu vào form.");
         }
 
         // Gọi hàm getCroppedImage trước khi submit form

@@ -1,5 +1,7 @@
 <?php
 include 'connect.php';
+
+// Truy vấn để lấy danh mục từ cơ sở dữ liệu
 $sql = "SELECT maloai as id, tenloai as name FROM loaisp";
 $categories = $conn->query($sql);
 ?>
@@ -13,8 +15,10 @@ $categories = $conn->query($sql);
     <title>Thêm sản phẩm</title>
     <!-- Thêm Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Thêm Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
     <style>
-       .image-preview {
+        .image-preview {
             position: relative;
             display: inline-block;
             margin-right: 10px;
@@ -44,17 +48,32 @@ $categories = $conn->query($sql);
             font-size: 12px;
             margin-top: 5px;
         }
-    </style>
 
+        #previewContainer {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        #image-preview {
+            width: 100%;
+            max-width: 500px;
+            margin: 20px 0;
+        }
+
+        /* Cropper.js Container */
+        #cropperContainer {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 
 <body>
     <div class="container mt-5">
         <h2 class="text-center mb-4">Thêm sản phẩm mới</h2>
 
-        <form action="upload_product.php" method="POST" enctype="multipart/form-data"
-            class="p-4 border rounded shadow-sm bg-light">
-
+        <form action="upload_product.php" method="POST" enctype="multipart/form-data" class="p-4 border rounded shadow-sm bg-light">
             <div class="form-group">
                 <label for="name">Tên sản phẩm:</label>
                 <input type="text" name="name" id="name" class="form-control" required>
@@ -78,28 +97,36 @@ $categories = $conn->query($sql);
                     ?>
                 </select>
             </div>
+
             <div class="form-group">
                 <label for="images">Chọn ảnh sản phẩm:</label>
-                <input type="file" name="images[]" id="images" class="form-control-file" multiple accept="image/*" onchange="previewImages()">
-
+                <input type="file" name="images[]" id="images" class="form-control-file" multiple accept="image/*" onchange="previewImage()">
             </div>
 
             <!-- Chỗ hiển thị ảnh đã chọn -->
             <div id="imagePreviewContainer"></div>
 
+            <!-- Chỗ hiển thị ảnh đã crop -->
+            <div id="cropperContainer" style="display: none;">
+                <img id="image-preview" src="" alt="Image Preview" />
+                <div>
+                    <button type="button" class="btn btn-success mt-2" onclick="getCroppedImage()">Lưu ảnh đã crop</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="cropped_image" id="cropped_image">
+
             <button type="submit" class="btn btn-primary btn-block">Thêm sản phẩm</button>
         </form>
     </div>
 
-    <!-- Bootstrap JS, Popper.js và jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Thêm Cropper.js và các script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
-        let filesArray = []; // Mảng lưu trữ các tệp ảnh đã chọn
+        let cropper;
 
-        // Hàm hiển thị ảnh đã chọn và tạo nút xóa
-        function previewImages() {
+        // Hàm load ảnh chọn từ file input
+        function previewImage() {
             const files = document.getElementById('images').files;
             const previewContainer = document.getElementById('imagePreviewContainer');
             previewContainer.innerHTML = ""; // Xóa các ảnh đã hiển thị trước đó
@@ -108,42 +135,49 @@ $categories = $conn->query($sql);
                 const reader = new FileReader();
 
                 reader.onload = function (e) {
-                    // Tạo thẻ div cho mỗi ảnh
-                    const div = document.createElement('div');
-                    div.classList.add('image-preview');
-                    div.innerHTML = `
-                        <img src="${e.target.result}" alt="Image ${index}">
-                        <button type="button" class="delete-icon" onclick="removeImage(${index}, this)">X</button>
-                    `;
-                    previewContainer.appendChild(div);
-                    // Thêm ảnh vào mảng filesArray
-                    filesArray.push(file);
-                };
+                    const imgElement = document.getElementById('image-preview');
+                    imgElement.src = e.target.result;
+                    document.getElementById('cropperContainer').style.display = 'block'; // Hiển thị container cropper
 
+                    // Khởi tạo cropper khi ảnh được load
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    cropper = new Cropper(imgElement, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        crop(event) {
+                            // Tùy chỉnh crop theo nhu cầu
+                        }
+                    });
+                };
                 reader.readAsDataURL(file);
             });
         }
 
-        // Hàm xóa ảnh khi nhấn vào nút X
-        function removeImage(index, button) {
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            previewContainer.removeChild(button.parentElement);
-            // Xóa ảnh khỏi mảng filesArray
-            filesArray.splice(index, 1);
-            // Cập nhật lại phần input file để loại bỏ ảnh đã xóa
-            updateFileInput();
+        // Hàm lấy ảnh đã crop
+        function getCroppedImage() {
+            const croppedCanvas = cropper.getCroppedCanvas({
+                width: 300, // Kích thước ảnh đã crop
+                height: 300,
+            });
+            const croppedImage = croppedCanvas.toDataURL('image/jpeg'); // Chuyển ảnh đã crop thành base64
+            document.getElementById('cropped_image').value = croppedImage; // Lưu ảnh đã crop vào hidden field
+            alert("Ảnh đã được crop và lưu vào form.");
         }
 
-        // Hàm cập nhật lại phần input file sau khi xóa ảnh
-        function updateFileInput() {
-            const fileInput = document.getElementById('images');
-            const dataTransfer = new DataTransfer();
-            filesArray.forEach(file => {
-                dataTransfer.items.add(file);
-            });
-            fileInput.files = dataTransfer.files; // Cập nhật lại tệp ảnh trong input file
-        }
+        // Gọi hàm getCroppedImage trước khi submit form
+        document.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault(); // Ngừng hành động submit mặc định
+            getCroppedImage(); // Lấy ảnh đã crop
+            this.submit(); // Gửi form sau khi lấy ảnh
+        });
     </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 
 </html>

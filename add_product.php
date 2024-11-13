@@ -1,13 +1,13 @@
 <?php
 include 'connect.php';
-
-// Truy vấn để lấy danh mục từ cơ sở dữ liệu
 $sql = "SELECT maloai as id, tenloai as name FROM loaisp";
 $categories = $conn->query($sql);
 ?>
 
+
 <!DOCTYPE html>
 <html lang="vi">
+
 
 <head>
     <meta charset="UTF-8">
@@ -15,21 +15,21 @@ $categories = $conn->query($sql);
     <title>Thêm sản phẩm</title>
     <!-- Thêm Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Thêm Cropper.js CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
     <style>
-        .image-preview {
+       .image-preview {
             position: relative;
             display: inline-block;
             margin-right: 10px;
             margin-bottom: 10px;
         }
 
+
         .image-preview img {
             width: 100px;
             height: 100px;
             object-fit: cover;
         }
+
 
         .image-preview .delete-icon {
             position: absolute;
@@ -43,39 +43,36 @@ $categories = $conn->query($sql);
             border-radius: 50%;
         }
 
+
         .image-preview .image-name {
             text-align: center;
             font-size: 12px;
             margin-top: 5px;
         }
-
-        #previewContainer {
-            width: 100%;
-            margin: 20px 0;
-        }
-
-        #image-preview {
-            width: 100%;
-            max-width: 500px;
-            margin: 20px 0;
-        }
     </style>
 </head>
+
 
 <body>
     <div class="container mt-5">
         <h2 class="text-center mb-4">Thêm sản phẩm mới</h2>
 
-        <form action="upload_product.php" method="POST" enctype="multipart/form-data" class="p-4 border rounded shadow-sm bg-light">
+
+        <form action="upload_product.php" method="POST" enctype="multipart/form-data"
+            class="p-4 border rounded shadow-sm bg-light">
+
+
             <div class="form-group">
                 <label for="name">Tên sản phẩm:</label>
                 <input type="text" name="name" id="name" class="form-control" required>
             </div>
 
+
             <div class="form-group">
                 <label for="price">Giá sản phẩm:</label>
                 <input type="number" name="price" id="price" class="form-control" required>
             </div>
+
 
             <div class="form-group">
                 <label for="category">Chọn danh mục:</label>
@@ -86,86 +83,88 @@ $categories = $conn->query($sql);
                         while ($row = $categories->fetch_assoc()) {
                             echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
                         }
-                    } else {
-                        echo "<option value=''>Không có danh mục</option>";
                     }
                     ?>
                 </select>
             </div>
-
             <div class="form-group">
                 <label for="images">Chọn ảnh sản phẩm:</label>
-                <input type="file" name="images[]" id="images" class="form-control-file" multiple accept="image/*" onchange="previewImage()">
+                <input type="file" name="images[]" id="images" class="form-control-file" multiple accept="image/*" onchange="previewImages()">
+
+
             </div>
+
 
             <!-- Chỗ hiển thị ảnh đã chọn -->
             <div id="imagePreviewContainer"></div>
-
-            <!-- Chỗ hiển thị ảnh đã crop -->
-            <div id="cropperContainer" style="display: none;">
-                <img id="image-preview" src="" alt="Image Preview" />
-            </div>
-
-            <input type="hidden" name="cropped_image" id="cropped_image">
 
             <button type="submit" class="btn btn-primary btn-block">Thêm sản phẩm</button>
         </form>
     </div>
 
-    <!-- Thêm Cropper.js và các script -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-    <script>
-        let cropper;
 
-        // Hàm load ảnh chọn từ file input
-        function previewImage() {
+    <!-- Bootstrap JS, Popper.js và jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        let filesArray = []; // Mảng lưu trữ các tệp ảnh đã chọn
+
+
+        // Hàm hiển thị ảnh đã chọn và tạo nút xóa
+        function previewImages() {
             const files = document.getElementById('images').files;
             const previewContainer = document.getElementById('imagePreviewContainer');
             previewContainer.innerHTML = ""; // Xóa các ảnh đã hiển thị trước đó
 
+
             Array.from(files).forEach((file, index) => {
                 const reader = new FileReader();
 
-                reader.onload = function (e) {
-                    const imgElement = document.getElementById('image-preview');
-                    imgElement.src = e.target.result;
-                    document.getElementById('cropperContainer').style.display = 'block'; // Hiển thị container cropper
 
-                    // Khởi tạo cropper khi ảnh được load
-                    if (cropper) {
-                        cropper.destroy();
-                    }
-                    cropper = new Cropper(imgElement, {
-                        aspectRatio: 1,
-                        viewMode: 1,
-                        dragMode: 'move',
-                    });
+                reader.onload = function (e) {
+                    // Tạo thẻ div cho mỗi ảnh
+                    const div = document.createElement('div');
+                    div.classList.add('image-preview');
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="Image ${index}">
+                        <button type="button" class="delete-icon" onclick="removeImage(${index}, this)">X</button>
+                    `;
+                    previewContainer.appendChild(div);
+                    // Thêm ảnh vào mảng filesArray
+                    filesArray.push(file);
                 };
+
+
                 reader.readAsDataURL(file);
             });
         }
 
-        // Hàm lấy ảnh đã crop
-        function getCroppedImage() {
-            const croppedCanvas = cropper.getCroppedCanvas({
-                width: 300, // Kích thước ảnh đã crop
-                height: 300,
-            });
-            const croppedImage = croppedCanvas.toDataURL('image/jpeg'); // Chuyển ảnh đã crop thành base64
-            document.getElementById('cropped_image').value = croppedImage; // Lưu ảnh đã crop vào hidden field
+
+        // Hàm xóa ảnh khi nhấn vào nút X
+        function removeImage(index, button) {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            previewContainer.removeChild(button.parentElement);
+            // Xóa ảnh khỏi mảng filesArray
+            filesArray.splice(index, 1);
+            // Cập nhật lại phần input file để loại bỏ ảnh đã xóa
+            updateFileInput();
         }
 
-        // Gọi hàm getCroppedImage trước khi submit form
-        document.querySelector('form').addEventListener('submit', function (e) {
-            e.preventDefault(); // Ngừng hành động submit mặc định
-            getCroppedImage(); // Lấy ảnh đã crop
-            this.submit(); // Gửi form sau khi lấy ảnh
-        });
-    </script>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        function updateFileInput() {
+            const fileInput = document.getElementById('images');
+            const dataTransfer = new DataTransfer();
+            filesArray.forEach(file => {
+                dataTransfer.items.add(file);
+            });
+            fileInput.files = dataTransfer.files;
+        }
+
+
+    </script>
 </body>
 
+
 </html>
+

@@ -32,23 +32,6 @@ if (isset($_GET['masp'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết sản phẩm</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        /* Đặt kích thước cố định cho ảnh trong carousel */
-        .carousel-inner img {
-            object-fit: cover; 
-            border-radius: 10px; 
-        }
-
-        .carousel-control-prev-icon,
-        .carousel-control-next-icon {
-            background-color: orange; 
-        }
-
-        .carousel-control-prev-icon:hover,
-        .carousel-control-next-icon:hover {
-            background-color: darkorange;
-        }
-    </style>
 </head>
 <body>
 
@@ -56,46 +39,34 @@ if (isset($_GET['masp'])) {
     <h2 class="text-center mb-4">Chi tiết sản phẩm</h2>
     <div class="card">
         <div class="card-body d-flex flex-row">
-            <!-- Cột hiển thị ảnh sản phẩm (Carousel) -->
-            <div class="col-md-6 pr-4">
-                <div id="productImagesCarousel" class="carousel slide" data-ride="carousel">
-                    <div class="carousel-inner">
-                        <?php
-                        $images = json_decode($product['anh']);
-                        if (is_array($images)) {
-                            $isActive = true;
-                            foreach ($images as $image) {
-                                echo '<div class="carousel-item ' . ($isActive ? 'active' : '') . '">';
-                                echo "<img src='" . htmlspecialchars($image) . "' alt='Ảnh sản phẩm' class='d-block w-100'>";
-                                echo '</div>';
-                                $isActive = false;
-                            }
-                        }
-                        ?>
-                    </div>
-                    <a class="carousel-control-prev" href="#productImagesCarousel" role="button" data-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="sr-only">Previous</span>
-                    </a>
-                    <a class="carousel-control-next" href="#productImagesCarousel" role="button" data-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="sr-only">Next</span>
-                    </a>
-                </div>
+            <div class="card-items mr-5">
+                <?php
+                $images = json_decode($product['anh']);
+                if (is_array($images)) {
+                    foreach ($images as $image) {
+                        // Khi nhấn vào ảnh, hiển thị ảnh trong modal
+                        echo "<a href='#' data-toggle='modal' data-target='#imageModal' onclick='changeModalImage(\"" . htmlspecialchars($image) . "\")'>
+                                <img src='" . htmlspecialchars($image) . "' 
+                                     srcset='" . htmlspecialchars($image) . " 1x, " . htmlspecialchars($image) . "@2x.jpg 2x' 
+                                     alt='Ảnh sản phẩm' 
+                                     class='img-thumbnail' 
+                                     style='max-width: 400px; max-height: 400px; margin-right: 10px;'>
+                              </a>";
+                    }
+                }
+                ?>
             </div>
-
-            <!-- Cột hiển thị thông tin sản phẩm -->
-            <div class="col-md-6">
+            <div>
                 <h3 class="pb-3"><?php echo htmlspecialchars($product['tensp']); ?></h3>
                 <ul>
                     <li>
-                        <p><strong>Mã sản phẩm:</strong> <?php echo htmlspecialchars($product['masp']); ?></p>
+                    <p><strong>Mã sản phẩm:</strong> <?php echo htmlspecialchars($product['masp']); ?></p>
                     </li>
                     <li>
-                        <p><strong>Đơn giá:</strong> <?php echo number_format($product['dongia'], 0, ',', '.') . " VND"; ?></p>
+                    <p><strong>Đơn giá:</strong> <?php echo number_format($product['dongia'], 0, ',', '.') . " VND"; ?></p>
                     </li>
                     <li>
-                        <p><strong>Mô tả:</strong> <?php echo htmlspecialchars($product['mota']); ?></p>
+                    <p><strong>Mô tả:</strong> <?php echo htmlspecialchars($product['mota']); ?></p>
                     </li>
                 </ul>
             </div>
@@ -103,6 +74,23 @@ if (isset($_GET['masp'])) {
     </div>
     <a href="index.php" class="btn btn-secondary mt-4">Quay lại trang danh sách sản phẩm</a>
 </div>
+
+<!-- Modal để phóng to ảnh -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <img id="modalImage" src="" alt="Ảnh phóng to" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function changeModalImage(imageSrc) {
+        document.getElementById('modalImage').src = imageSrc;
+    }
+</script>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>

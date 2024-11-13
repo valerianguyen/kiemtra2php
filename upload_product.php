@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $maxFileSize = 2 * 1024 * 1024; // Giới hạn tệp 2MB
 
     // Các định dạng ảnh cho phép
-    $allowedExtensions = ['jpg', 'png', 'gif'];
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
 
     if (!empty($_FILES['images']['name'][0])) {
         foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
@@ -43,13 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Kiểm tra định dạng tệp
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
             if (!in_array($fileExtension, $allowedExtensions)) {
-                $errorMessage = "Chỉ chấp nhận định dạng ảnh .jpg, .png, .gif.";
+                $errorMessage = "Chỉ chấp nhận định dạng ảnh .jpg, .jpeg, .png, .gif.";
                 break;
             }
 
             // Nén và resize ảnh trước khi lưu
             if ($fileExtension == 'gif') {
-                resizeGifImageGD($tmpName, $targetFilePath, 400, 400);
+                resizeGifImage($tmpName, $targetFilePath, 400, 400);
             } else {
                 compressAndResizeImage($tmpName, $targetFilePath, 400, 400, $fileExtension);
             }
@@ -106,40 +106,15 @@ function compressAndResizeImage($source, $destination, $width, $height, $extensi
     }
 
     if ($image) {
+        // Resize ảnh
         $newImage = imagescale($image, $width, $height);
-        if ($extension == 'jpg' || $extension == 'jpeg') {
-            imagejpeg($newImage, $destination, 75); // Chất lượng 75% cho JPEG
-        } elseif ($extension == 'png') {
-            imagepng($newImage, $destination, 6); // Chất lượng trung bình cho PNG
-        }
-        imagedestroy($image);
-        imagedestroy($newImage);
-    }
-}
-
-function resizeGifImageGD($source, $destination, $width, $height) {
-    // Mở ảnh GIF động
-    $image = imagecreatefromgif($source);
-    
-    // Kiểm tra nếu ảnh được mở thành công
-    if ($image !== false) {
-        // Tạo một bản sao ảnh mới với kích thước đã thay đổi
-        $newImage = imagecreatetruecolor($width, $height);
         
-        // Tạo ảnh GIF động mới với các khung hình đã được nén và resize
-        $frames = [];
-        $delays = [];
-
-        // Lấy các khung hình của ảnh GIF
-        $numFrames = imagegif($image, $source);
-        for ($i = 0; $i < $numFrames; $i++) {
-            // Đặt các khung hình ảnh vào một mảng
-            $frames[] = $image;
-            $delays[] = 100; // Điều chỉnh delay của mỗi khung hình
+        // Lưu ảnh với chất lượng nén
+        if ($extension == 'jpg' || $extension == 'jpeg') {
+            imagejpeg($newImage, $destination, 90); // Chất lượng 70% cho JPEG
+        } elseif ($extension == 'png') {
+            imagepng($newImage, $destination, 9); // Chất lượng tốt hơn cho PNG
         }
-
-        // Lưu ảnh GIF mới vào thư mục đích
-        imagegif($newImage, $destination);
 
         // Giải phóng bộ nhớ
         imagedestroy($image);
@@ -147,5 +122,31 @@ function resizeGifImageGD($source, $destination, $width, $height) {
     }
 }
 
+// Hàm resize và lưu ảnh GIF động
+function resizeGifImage($source, $destination, $width, $height) {
+    // Mở ảnh GIF động
+    $gif = imagecreatefromgif($source);
+    
+    if ($gif === false) {
+        return false;
+    }
 
+    // Tạo một ảnh GIF động mới với các khung hình đã được resize
+    $newGif = imagecreatetruecolor($width, $height);
+    $totalFrames = 5; // Giả sử GIF có 5 khung hình
+
+    for ($frameIndex = 0; $frameIndex < $totalFrames; $frameIndex++) {
+        // Chọn từng khung hình và resize
+        imagecopyresampled($newGif, $gif, 0, 0, 0, 0, $width, $height, imagesx($gif), imagesy($gif));
+    }
+
+    // Lưu ảnh GIF động vào đích
+    imagegif($newGif, $destination);
+
+    // Giải phóng bộ nhớ
+    imagedestroy($gif);
+    imagedestroy($newGif);
+
+    return true;
+}
 ?>

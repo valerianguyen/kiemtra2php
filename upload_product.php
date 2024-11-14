@@ -74,15 +74,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $imagesJson = json_encode($uploadedFiles);
 
     // Chuẩn bị câu truy vấn SQL
-    $sql = "INSERT INTO sanpham (tensp, dongia, maloai, anh) VALUES (?, ?, ?, ?)";
+    $sql = "INSERT INTO sanpham (tensp, soluong, dongia, mota, maloai, anh) VALUES (?, ?, ?, ?, ?, ?)";
 
     if ($stmt = $conn->prepare($sql)) {
         // Thực hiện bind_param với đúng số lượng và kiểu dữ liệu
-        $stmt->bind_param("siss", $name, $price, $category_id, $imagesJson);
+        $stmt->bind_param("sidsis", $name, $quantity, $price, $description, $category_id, $imagesJson);
 
         if ($stmt->execute()) {
             echo "Thêm sản phẩm thành công!";
             header("Location: index.php");
+            exit; // Thêm exit để dừng script sau khi điều hướng
         } else {
             echo "Lỗi khi thực thi câu truy vấn: " . $stmt->error;
         }

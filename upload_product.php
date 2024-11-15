@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($stmt = $conn->prepare($sql)) {
         // Thực hiện bind_param với đúng số lượng và kiểu dữ liệu
-        $stmt->bind_param("sidsis", $name, $quantity, $price, $description, $category_id, $imagesJson);
+        $stmt->bind_param("sissss", $name, $quantity, $price, $description, $category_id, $imagesJson);
 
         if ($stmt->execute()) {
             echo "Thêm sản phẩm thành công!";

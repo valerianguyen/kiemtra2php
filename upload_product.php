@@ -3,8 +3,10 @@
 include 'connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = $_POST['name'];
+    $name = htmlspecialchars($_POST['name']);
+    $quantity = $_POST['quantity'];
     $price = $_POST['price'];
+    $description = htmlspecialchars($_POST['description']);
     $category_id = $_POST['category'];
     $uploadDirectory = "uploads/";
 

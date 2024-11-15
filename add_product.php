@@ -80,7 +80,7 @@ $categories = $conn->query($sql);
 
             <div class="form-group">
                 <label for="description">Mô tả:</label>
-                <textarea name="description" id="description" class="form-control" rows="3" required></textarea>
+                <textarea name="description" id="description" class="form-control" required></textarea>
             </div>
 
             <div class="form-group">

@@ -67,12 +67,21 @@ $categories = $conn->query($sql);
                 <input type="text" name="name" id="name" class="form-control" required>
             </div>
 
+            <div class="form-group">
+                <label for="quantity">Số lượng:</label>
+                <input type="number" name="quantity" id="quantity" class="form-control" required>
+            </div>
+
 
             <div class="form-group">
                 <label for="price">Giá sản phẩm:</label>
                 <input type="number" name="price" id="price" class="form-control" required>
             </div>
 
+            <div class="form-group">
+                <label for="description">Mô tả:</label>
+                <textarea name="description" id="description" class="form-control" required></textarea>
+            </div>
 
             <div class="form-group">
                 <label for="category">Chọn danh mục:</label>
